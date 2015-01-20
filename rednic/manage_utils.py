@@ -14,6 +14,7 @@ class ManageExeption(BaseException):
 
 
 class ManageUtils(object):
+    """ Collection of tools for manage cinder volumes """
 
     cinder = None
 
@@ -22,7 +23,16 @@ class ManageUtils(object):
     log = None
 
     def __init__(self, user, password, tenant, auth_url, log=None):
+        """ Connect to cinder and nova:
 
+        Args:
+            user: user name in opensack
+            password: password for this user
+            tenant: project name
+            auth_url: authentication url
+            log: logging object that can be used for logging,
+                can be None
+        """
         self.cinder = cinder_client.Client(
             '1', user, password, tenant, auth_url
         )
@@ -37,6 +47,15 @@ class ManageUtils(object):
             self.log = logging.getLogger('rednic.manage_utils')
 
     def __instance_convert__(self, instance):
+        """ Convert internal instance description to dict format.
+
+        Args:
+            instance - object to convert
+
+        Returns:
+            dictionary with all meaningful information
+        """
+
         if not instance:
             self.log.error("empty instance")
             return None
@@ -50,6 +69,14 @@ class ManageUtils(object):
         }
 
     def __volume_convert__(self, volume):
+        """ Convert internal volume description to dict format.
+
+        Args:
+            volume - object to convert
+
+        Returns:
+            dictionary with all meaningful information
+        """
         if not volume:
             self.log.error("empty volume")
             return volume
@@ -66,8 +93,10 @@ class ManageUtils(object):
         }
 
     def volume_list(self):
-        """
-            get list of existed volumes
+        """get list of existed volumes
+
+        Returns:
+            list of dictionaries with volumes description
         """
         self.log.debug("get list volumes")
 
@@ -76,8 +105,14 @@ class ManageUtils(object):
         return [self.__volume_convert__(v) for v in volumes]
 
     def volume_create(self, size, name=None, description=None):
-        """
-            create volume
+        """create volume
+
+        Args:
+            name: name of new volume
+            description: description for new volume
+
+        Returns:
+            dictionary with description of new volume
         """
         self.log.debug("create volume")
 
@@ -90,11 +125,17 @@ class ManageUtils(object):
         )
 
     def volume_get(self, vol_id=None, name=None):
-        """
-            get volume by vol_id or name,
-            vol_id - mush faster and have priority
+        """get volume by vol_id or name
 
-            return volume or raise ManageExeption
+        Args:
+            vol_id: volume id for search,
+                    much faster and have priority than name
+            name:
+                volume name for search
+        Returns:
+            volume as dictionary
+
+            or raise ManageExeption
         """
         if vol_id:
             self.log.debug("get volume by vol_id")
@@ -132,6 +173,46 @@ class ManageUtils(object):
                 if instance['name'] == name:
                     return instance
         raise ManageExeption()
+
+    def instance_attach_ip(self, ip, ins_id=None, name=None):
+        """ attach some ip to instance
+
+        Args:
+            ip: ip that will be used
+            ins_id: id of instance
+            name: instance name
+        Raises:
+            ManageExeption: in case when can't attach ip
+        """
+        if name:
+            internal_instance = self.instance_get(name=name)
+            ins_id = internal_instance['id']
+
+        instance = self.nova.servers.get(ins_id)
+        try:
+            instance.add_floating_ip(ip)
+        except cinder_exceptions.NotFound:
+            raise ManageExeption()
+
+    def instance_detach_ip(self, ip, ins_id=None, name=None):
+        """ detach some ip from instance
+
+        Args:
+            ip: ip that will be used
+            ins_id: id of instance
+            name: instance name
+        Raises:
+            ManageExeption: in case when can't detach ip
+        """
+        if name:
+            internal_instance = self.instance_get(name=name)
+            ins_id = internal_instance['id']
+
+        instance = self.nova.servers.get(ins_id)
+        try:
+            instance.remove_floating_ip(ip)
+        except cinder_exceptions.NotFound:
+            raise ManageExeption()
 
     def volume_detach(self, vol_id=None, name=None):
         """

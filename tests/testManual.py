@@ -14,12 +14,12 @@ unitLogger.setLevel(logging.DEBUG)
 handler = logging.FileHandler("./manual_test.log")
 unitLogger.addHandler(handler)
 
+MAXWAIT = 20
+
 
 class TestManual(unittest.TestCase):
 
     manage_obj = None
-
-    max_wait = 20
 
     def setUp(self):
 
@@ -93,11 +93,11 @@ class TestManual(unittest.TestCase):
 
         count_try = 0
         while volume and volume['status'] == "creating" and \
-                count_try < self.max_wait:
+                count_try < MAXWAIT:
             time.sleep(5)
             volume = self.manage_obj.volume_get(created['id'])
             unitLogger.debug("Creating...")
-        self.assertTrue(count_try < self.max_wait)
+        self.assertTrue(count_try < MAXWAIT)
 
         return volume
 
@@ -111,11 +111,11 @@ class TestManual(unittest.TestCase):
         # or if we do everything very fast must be None
         count_try = 0
         while volume and volume['status'] == "deleting" and \
-                count_try < self.max_wait:
+                count_try < MAXWAIT:
             time.sleep(5)
             volume = self.__search_volume__(created['id'])
             unitLogger.debug("Deleting...")
-        self.assertTrue(count_try < self.max_wait)
+        self.assertTrue(count_try < MAXWAIT)
 
         # reget info
         volume = self.__search_volume__(created['id'])
@@ -156,12 +156,12 @@ class TestManual(unittest.TestCase):
         # or if we do everything very fast must be None
         count_try = 0
         while volume and volume['status'] == "deleting" and \
-                count_try < self.max_wait:
+                count_try < MAXWAIT:
             time.sleep(5)
             volume = self.__search_volume__(created['id'])
             count_try += 1
             unitLogger.debug("Deleting...")
-        self.assertTrue(count_try < self.max_wait)
+        self.assertTrue(count_try < MAXWAIT)
 
         # reget info
         volume = self.__search_volume__(created['id'])
@@ -183,11 +183,18 @@ class TestManual(unittest.TestCase):
             ins_id=instances[0]['id']
         )
 
+        self.manage_obj.instance_attach_ip(
+            "172.24.4.1", ins_id=instances[0]['id']
+        )
         # try to format volume
         # self.manage_obj.volume_format(
         #    "/dev/vdn", open('./cloud.key', 'r'), 'fedora',
         #    ins_id=instances[0]['id']
         # )
+
+        self.manage_obj.instance_detach_ip(
+            "172.24.4.1", ins_id=instances[0]['id']
+        )
 
         # drop attached must raise error
         with self.assertRaises(ManageExeption):
