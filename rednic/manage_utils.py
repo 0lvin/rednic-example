@@ -6,14 +6,14 @@ import paramiko
 import logging
 
 
-class manage_exeption(BaseException):
+class ManageExeption(BaseException):
     """
         some exeption with communication
     """
     pass
 
 
-class manage_utils(object):
+class ManageUtils(object):
 
     cinder = None
 
@@ -94,7 +94,7 @@ class manage_utils(object):
             get volume by vol_id or name,
             vol_id - mush faster and have priority
 
-            return volume or raise manage_exeption
+            return volume or raise ManageExeption
         """
         if vol_id:
             self.log.debug("get volume by vol_id")
@@ -103,20 +103,20 @@ class manage_utils(object):
                     self.cinder.volumes.get(vol_id)
                 )
             except cinder_exceptions.NotFound:
-                raise manage_exeption()
+                raise ManageExeption()
         else:
             self.log.debug("get volume by name")
             for volume in self.volume_list():
                 if volume['name'] == name:
                     return volume
-        raise manage_exeption()
+        raise ManageExeption()
 
     def instance_get(self, ins_id=None, name=None):
         """
             get instance by ins_id or name,
             ins_id - mush faster and have priority
 
-            return instance or raise manage_exeption
+            return instance or raise ManageExeption
         """
         if ins_id:
             self.log.debug("get instance by ins_id")
@@ -125,20 +125,20 @@ class manage_utils(object):
                     self.nova.servers.get(ins_id)
                 )
             except cinder_exceptions.NotFound:
-                raise manage_exeption()
+                raise ManageExeption()
         else:
             self.log.debug("get instance by name")
             for instance in self.instance_list():
                 if instance['name'] == name:
                     return instance
-        raise manage_exeption()
+        raise ManageExeption()
 
     def volume_detach(self, vol_id=None, name=None):
         """
             deatach volume by vol_id or name,
             vol_id - mush faster and have priority
 
-            return volume or raise manage_exeption
+            return volume or raise ManageExeption
         """
         if vol_id:
             self.log.debug("delete volume by vol_id")
@@ -151,14 +151,14 @@ class manage_utils(object):
         try:
             return self.cinder.volumes.detach(volume)
         except cinder_exceptions.BadRequest:
-                raise manage_exeption()
+                raise ManageExeption()
 
     def volume_delete(self, vol_id=None, name=None):
         """
             drop volume by vol_id or name,
             vol_id - mush faster and have priority
 
-            return volume or raise manage_exeption
+            return volume or raise ManageExeption
         """
         if vol_id:
             self.log.debug("delete volume by vol_id")
@@ -171,7 +171,7 @@ class manage_utils(object):
         try:
             return self.cinder.volumes.delete(volume)
         except cinder_exceptions.BadRequest:
-                raise manage_exeption()
+                raise ManageExeption()
 
     def instance_list(self):
         """
@@ -226,7 +226,7 @@ class manage_utils(object):
         if internal_instance:
             ip = internal_instance['networks']['private'][0]
         else:
-            raise manage_exeption()
+            raise ManageExeption()
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         with key_file:

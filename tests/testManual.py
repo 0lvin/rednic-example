@@ -1,8 +1,13 @@
 import unittest
-from manage_utils import manage_utils, manage_exeption
 import time
 import random
 import logging
+import sys
+import os
+
+sys.path.append(os.path.dirname(__file__) + "/..")
+from rednic.manage_utils import ManageUtils, ManageExeption
+
 
 unitLogger = logging.getLogger('unittest')
 unitLogger.setLevel(logging.DEBUG)
@@ -19,7 +24,7 @@ class TestManual(unittest.TestCase):
     def setUp(self):
 
         unitLogger.debug("-- setUp at %s --" % time.time())
-        self.manage_obj = manage_utils(
+        self.manage_obj = ManageUtils(
             "demo", "secrete", "demo",
             "http://10.0.2.15:5000/v2.0", unitLogger
         )
@@ -125,9 +130,9 @@ class TestManual(unittest.TestCase):
         some_id = "UnExistDisk%s" % (time.time())
         volume = self.__search_volume__(some_id)
         self.assertIsNone(volume)
-        with self.assertRaises(manage_exeption):
+        with self.assertRaises(ManageExeption):
             self.manage_obj.volume_get(some_id)
-        with self.assertRaises(manage_exeption):
+        with self.assertRaises(ManageExeption):
             self.manage_obj.volume_get(name=some_id)
 
     def testCreate(self):
@@ -185,7 +190,7 @@ class TestManual(unittest.TestCase):
         # )
 
         # drop attached must raise error
-        with self.assertRaises(manage_exeption):
+        with self.assertRaises(ManageExeption):
             self.__drop_volume__(created)
 
         # detach

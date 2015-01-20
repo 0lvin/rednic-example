@@ -1,9 +1,13 @@
 import unittest
-from manage_utils import manage_utils, manage_exeption
 import logging
 from mock import patch, MagicMock
 import cinderclient
 import novaclient
+import sys
+import os
+
+sys.path.append(os.path.dirname(__file__) + "/..")
+from rednic.manage_utils import ManageUtils, ManageExeption
 
 unitLogger = logging.getLogger('unittest')
 unitLogger.setLevel(logging.DEBUG)
@@ -125,7 +129,7 @@ class TestMock(unittest.TestCase):
             check init
         """
         # check init
-        self.manage_obj = manage_utils(
+        self.manage_obj = ManageUtils(
             "demo", "secrete", "demo",
             "http://10.0.2.15:5000/v2.0", unitLogger
         )
@@ -334,7 +338,7 @@ class TestMock(unittest.TestCase):
                     return_value=[instance]
                 )
                 # real run
-                with self.assertRaises(manage_exeption):
+                with self.assertRaises(ManageExeption):
                     # wrong name
                     self.manage_obj.volume_attach(
                         "/some/place", vol_name="name", ins_name="name"
@@ -440,7 +444,7 @@ class TestMock(unittest.TestCase):
                     return_value=[volume]
                 )
                 # real run
-                with self.assertRaises(manage_exeption):
+                with self.assertRaises(ManageExeption):
                     # wrong name
                     self.manage_obj.volume_get(name="id")
                 res_volume = self.manage_obj.volume_get(
