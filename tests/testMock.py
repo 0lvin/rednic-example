@@ -1,6 +1,6 @@
 import unittest
 import logging
-from mock import patch, MagicMock
+from mock import patch, MagicMock, Mock
 import cinderclient
 import novaclient
 import sys
@@ -18,6 +18,7 @@ unitLogger.addHandler(handler)
 class mockNovaInstance(object):
     """
         object for use as instance description in mocks
+        (used insted real server/instance in nova inside)
     """
 
     id = None
@@ -47,6 +48,7 @@ class mockNovaInstance(object):
 class mockCinderVolume(object):
     """
         object for use as volume description in mocks
+        (used insted real volume in cinder inside)
     """
 
     id = None
@@ -86,40 +88,6 @@ class mockCinderVolume(object):
             self.attachments = attachments
 
 
-class mockCinderVolumes(object):
-    """
-        volumes mock
-    """
-    pass
-
-
-class mockCinder(object):
-    """
-        cinder mock object
-    """
-    volumes = None
-
-    def __init__(self):
-        self.volumes = mockCinderVolumes()
-
-
-class mockNovaServers(object):
-    """
-        servers for nova
-    """
-    pass
-
-
-class mockNova(object):
-    """
-        nova mock object
-    """
-    servers = None
-
-    def __init__(self):
-        self.servers = mockNovaServers()
-
-
 class TestMock(unittest.TestCase):
 
     manage_obj = None
@@ -149,10 +117,10 @@ class TestMock(unittest.TestCase):
             check correct init for managment object
         """
         with patch.object(
-            cinderclient.client, 'Client', return_value=mockCinder()
+            cinderclient.client, 'Client', return_value=Mock()
         ) as mock_cinder:
             with patch.object(
-                novaclient.client, 'Client', return_value=mockNova()
+                novaclient.client, 'Client', return_value=Mock()
             ) as mock_nova:
                 self.__init_checks__(mock_cinder, mock_nova)
 
@@ -203,8 +171,8 @@ class TestMock(unittest.TestCase):
         """
             test for instance get
         """
-        will_be_nova = mockNova()
-        will_be_cinder = mockCinder()
+        will_be_nova = Mock()
+        will_be_cinder = Mock()
         instance = mockNovaInstance(
             id="id", name="name", status="status",
             key_name="key_name",  human_id="human_id",
@@ -238,14 +206,14 @@ class TestMock(unittest.TestCase):
         """
             check list instances
         """
-        will_be_nova = mockNova()
+        will_be_nova = Mock()
         instance = mockNovaInstance(
             id="id", name="name", status="status",
             key_name="key_name",  human_id="human_id",
             networks="networks"
         )
         with patch.object(
-            cinderclient.client, 'Client', return_value=mockCinder()
+            cinderclient.client, 'Client', return_value=Mock()
         ) as mock_cinder:
             with patch.object(
                 novaclient.client, 'Client', return_value=will_be_nova
@@ -265,8 +233,8 @@ class TestMock(unittest.TestCase):
             check attach by id
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         # object that will replace volume
         volume = mockCinderVolume(
             id="id", size="size", status="status",
@@ -303,8 +271,8 @@ class TestMock(unittest.TestCase):
             check attach by name
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         # object that will replace volume and instance
         instance = mockNovaInstance(
             id="id", name="name", status="status",
@@ -356,8 +324,8 @@ class TestMock(unittest.TestCase):
 
     def testVolumeCreate(self):
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -392,8 +360,8 @@ class TestMock(unittest.TestCase):
             check get volume by id
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -423,8 +391,8 @@ class TestMock(unittest.TestCase):
             check get volume by name
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -459,8 +427,8 @@ class TestMock(unittest.TestCase):
             check delete volume by id
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -493,8 +461,8 @@ class TestMock(unittest.TestCase):
             check delete volume by name
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -531,8 +499,8 @@ class TestMock(unittest.TestCase):
             check detach volume by id
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -565,8 +533,8 @@ class TestMock(unittest.TestCase):
             check detach volume by name
         """
         # some objects for replace cinder and nova
-        will_be_cinder = mockCinder()
-        will_be_nova = mockNova()
+        will_be_cinder = Mock()
+        will_be_nova = Mock()
         volume = mockCinderVolume(
             id="id", size="size", status="status",
             display_name="display_name",
@@ -607,13 +575,13 @@ class TestMock(unittest.TestCase):
             test list call
         """
 
-        will_be_cinder = mockCinder()
+        will_be_cinder = Mock()
 
         with patch.object(
             cinderclient.client, 'Client', return_value=will_be_cinder
         ) as mock_cinder:
             with patch.object(
-                novaclient.client, 'Client', return_value=mockNova()
+                novaclient.client, 'Client', return_value=Mock()
             ) as mock_nova:
 
                 self.__init_checks__(mock_cinder, mock_nova)
