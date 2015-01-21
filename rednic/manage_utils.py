@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # code for manage cinder volumes
 from cinderclient import client as cinder_client
 from cinderclient import exceptions as cinder_exceptions

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import unittest
 import logging
 from mock import patch, MagicMock, Mock
@@ -202,6 +204,86 @@ class TestMock(unittest.TestCase):
                 res_instance = self.manage_obj.instance_get(name="name")
                 will_be_nova.servers.list.assert_called_with()
                 self.__compare_instance__(res_instance, instance)
+
+    def testInstanceIpDetach(self):
+        """
+            test for instance detach ip
+        """
+        will_be_nova = Mock()
+        will_be_cinder = Mock()
+        instance = mockNovaInstance(
+            id="id", name="name", status="status",
+            key_name="key_name",  human_id="human_id",
+            networks="networks"
+        )
+        instance.remove_floating_ip = MagicMock()
+        with patch.object(
+            cinderclient.client, 'Client', return_value=will_be_cinder
+        ) as mock_cinder:
+            with patch.object(
+                novaclient.client, 'Client', return_value=will_be_nova
+            ) as mock_nova:
+                self.__init_checks__(mock_cinder, mock_nova)
+
+                # check detach to instance by id
+                will_be_nova.servers.get = MagicMock(
+                    return_value=instance
+                )
+                self.manage_obj.instance_detach_ip(
+                    "1.1.1.1", ins_id="id"
+                )
+                will_be_nova.servers.get.assert_called_with("id")
+                instance.remove_floating_ip.assert_called_with("1.1.1.1")
+
+                # check detach to instance by name
+                will_be_nova.servers.list = MagicMock(
+                    return_value=[instance]
+                )
+                self.manage_obj.instance_detach_ip(
+                    "1.1.1.1", name="name"
+                )
+                will_be_nova.servers.list.assert_called_with()
+                instance.remove_floating_ip.assert_called_with("1.1.1.1")
+
+    def testInstanceIpAttach(self):
+        """
+            test for instance attach ip
+        """
+        will_be_nova = Mock()
+        will_be_cinder = Mock()
+        instance = mockNovaInstance(
+            id="id", name="name", status="status",
+            key_name="key_name",  human_id="human_id",
+            networks="networks"
+        )
+        instance.add_floating_ip = MagicMock()
+        with patch.object(
+            cinderclient.client, 'Client', return_value=will_be_cinder
+        ) as mock_cinder:
+            with patch.object(
+                novaclient.client, 'Client', return_value=will_be_nova
+            ) as mock_nova:
+                self.__init_checks__(mock_cinder, mock_nova)
+
+                # check attach to instance by id
+                will_be_nova.servers.get = MagicMock(
+                    return_value=instance
+                )
+                self.manage_obj.instance_attach_ip(
+                    "1.1.1.1", ins_id="id"
+                )
+                will_be_nova.servers.get.assert_called_with("id")
+                instance.add_floating_ip.assert_called_with("1.1.1.1")
+
+                # check attach to instance by name
+                will_be_nova.servers.list = MagicMock(
+                    return_value=[instance]
+                )
+                self.manage_obj.instance_attach_ip(
+                    "1.1.1.1", name="name"
+                )
+                will_be_nova.servers.list.assert_called_with()
+                instance.add_floating_ip.assert_called_with("1.1.1.1")
 
     def testInstanceList(self):
         """
@@ -601,6 +683,7 @@ class TestMock(unittest.TestCase):
                 with patch.object(
                     paramiko.RSAKey, 'from_private_key', return_value="secret"
                 ) as mock_rsa_key:
+                    # look to calls inside format
                     result = self.manage_obj.volume_format(
                         "mount_point", key, "username", "ins_ip"
                     )
