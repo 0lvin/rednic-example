@@ -201,6 +201,9 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.list = MagicMock(
                     return_value=[instance]
                 )
+                with self.assertRaises(ManageExeption):
+                    # wrong name
+                    self.manage_obj.instance_get(name="id")
                 res_instance = self.manage_obj.instance_get(name="name")
                 will_be_nova.servers.list.assert_called_with()
                 self.__compare_instance__(res_instance, instance)
@@ -668,7 +671,8 @@ class TestMock(unittest.TestCase):
         channel_mock = Mock()
         channel_mock.get_pty = MagicMock()
         channel_mock.exec_command = MagicMock()
-        channel_mock.recv = MagicMock(return_value="RECV\nOK")
+        return_value = "*" * 160 + "RECV\nOK"
+        channel_mock.recv = MagicMock(return_value=return_value)
         # transport mock
         transport_mock = MagicMock()
         transport_mock.open_session = MagicMock(return_value=channel_mock)
@@ -703,7 +707,7 @@ class TestMock(unittest.TestCase):
                         "sudo /sbin/mkfs.ext4 mount_point && " +
                         "echo OK || echo FAIL"
                     )
-                    self.assertEqual(result, "RECV\nOK")
+                    self.assertEqual(result, return_value)
         key.close()
 
     def testVolumeList(self):
