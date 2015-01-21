@@ -189,7 +189,7 @@ class TestManual(unittest.TestCase):
         # try to format volume
         # self.manage_obj.volume_format(
         #    "/dev/vdn", open('./cloud.key', 'r'), 'fedora',
-        #    ins_id=instances[0]['id']
+        #    "172.24.4.1"
         # )
 
         self.manage_obj.instance_detach_ip(

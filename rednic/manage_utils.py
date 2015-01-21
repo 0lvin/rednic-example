@@ -329,8 +329,7 @@ class ManageUtils(object):
         return self.volume_get(vol_id=vol_id)
 
     def volume_format(
-        self, mount_point, key_file, username, ins_id=None,
-        ins_name=None
+        self, mount_point, key_file, username, ins_ip
     ):
         """connect by ssh to instance and format volume
 
@@ -338,27 +337,17 @@ class ManageUtils(object):
             mount_point: dev name for format
             key_file: file handler for private key,
             username: user name on instance
-            ins_id: instance id,
-                much faster and have higher priority than ins_name
-            ins_name:
-                instance name
+            ins_ip: ip for connect
 
         Raises:
             ManageExeption: in case when can't get volume
         """
-        internal_instance = self.instance_get(
-            name=ins_name, ins_id=ins_id
-        )
-
-        if internal_instance:
-            ip = internal_instance['networks']['private'][0]
-        else:
-            raise ManageExeption()
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        buff = ""
         with key_file:
             ssh.connect(
-                ip, username=username,
+                ins_ip, username=username,
                 pkey=paramiko.RSAKey.from_private_key(key_file)
             )
             chan = ssh.get_transport().open_session()
@@ -366,8 +355,9 @@ class ManageUtils(object):
             chan.exec_command(
                 'sudo /sbin/mkfs.ext4 /dev/vdb && echo OK || echo FAIL'
             )
-            buff = chan.recv(80)
+            buff += chan.recv(80)
             while buff.find("\nOK") == -1 and buff.find("\nFAIL") == -1:
                 buff += chan.recv(80)
             chan.close()
         ssh.close()
+        return buff
