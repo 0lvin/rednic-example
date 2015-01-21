@@ -353,7 +353,9 @@ class ManageUtils(object):
             chan = ssh.get_transport().open_session()
             chan.get_pty()
             chan.exec_command(
-                'sudo /sbin/mkfs.ext4 /dev/vdb && echo OK || echo FAIL'
+                'sudo /sbin/mkfs.ext4 %s && echo OK || echo FAIL' % (
+                    mount_point
+                )
             )
             buff += chan.recv(80)
             while buff.find("\nOK") == -1 and buff.find("\nFAIL") == -1:

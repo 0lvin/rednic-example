@@ -3,6 +3,7 @@ import logging
 from mock import patch, MagicMock, Mock
 import cinderclient
 import novaclient
+import paramiko
 import sys
 import os
 
@@ -566,9 +567,61 @@ class TestMock(unittest.TestCase):
                 will_be_cinder.volumes.detach.assert_called_with(volume)
                 will_be_cinder.volumes.list.assert_called_with()
 
-    @unittest.skip("not fully tested")
-    def testVolumeFormat(self):
-        pass
+    @patch.object(novaclient.client, 'Client')
+    @patch.object(cinderclient.client, 'Client')
+    def testVolumeFormat(self, mock_cinder, mock_nova):
+        """
+            test ssh/connect logic
+        """
+        # add minimal check for cinder/nova connect
+        self.__init_checks__(mock_cinder, mock_nova)
+        key = open(
+            os.path.dirname(__file__) + "/../configs/cloud.key"
+        )
+        # ssh mock
+        will_be_ssh = Mock()
+        will_be_ssh.set_missing_host_key_policy = MagicMock()
+        will_be_ssh.connect = MagicMock()
+        # channel mock
+        channel_mock = Mock()
+        channel_mock.get_pty = MagicMock()
+        channel_mock.exec_command = MagicMock()
+        channel_mock.recv = MagicMock(return_value="RECV\nOK")
+        # transport mock
+        transport_mock = MagicMock()
+        transport_mock.open_session = MagicMock(return_value=channel_mock)
+        will_be_ssh.get_transport = MagicMock(return_value=transport_mock)
+
+        with patch.object(
+            paramiko, 'SSHClient', return_value=will_be_ssh
+        ) as mock_ssh_client:
+            with patch.object(
+                paramiko, 'AutoAddPolicy', return_value="I'm policy"
+            ) as mock_policy:
+                with patch.object(
+                    paramiko.RSAKey, 'from_private_key', return_value="secret"
+                ) as mock_rsa_key:
+                    result = self.manage_obj.volume_format(
+                        "mount_point", key, "username", "ins_ip"
+                    )
+                    mock_ssh_client.assert_called_with()
+                    mock_policy.assert_called_with()
+                    will_be_ssh.set_missing_host_key_policy.assert_called_with(
+                        "I'm policy"
+                    )
+                    mock_rsa_key.assert_called_with(key)
+                    will_be_ssh.connect.assert_called_with(
+                        'ins_ip', username='username', pkey='secret'
+                    )
+                    will_be_ssh.get_transport.assert_called_with()
+                    transport_mock.open_session.assert_called_with()
+                    channel_mock.get_pty.assert_called_with()
+                    channel_mock.exec_command.assert_called_with(
+                        "sudo /sbin/mkfs.ext4 mount_point && " +
+                        "echo OK || echo FAIL"
+                    )
+                    self.assertEqual(result, "RECV\nOK")
+        key.close()
 
     def testVolumeList(self):
         """
