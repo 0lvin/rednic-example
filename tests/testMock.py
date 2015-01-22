@@ -93,14 +93,14 @@ class mockCinderVolume(object):
 
 class TestMock(unittest.TestCase):
 
-    manage_obj = None
+    _manage_obj = None
 
     def __init_checks__(self, mock_cinder, mock_nova):
         """
             check init
         """
         # check init
-        self.manage_obj = ManageUtils(
+        self._manage_obj = ManageUtils(
             "demo", "secrete", "demo",
             "http://10.0.2.15:5000/v2.0", unitLogger
         )
@@ -193,7 +193,7 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.get = MagicMock(
                     return_value=instance
                 )
-                res_instance = self.manage_obj.instance_get(ins_id="id")
+                res_instance = self._manage_obj.instance_get(ins_id="id")
                 will_be_nova.servers.get.assert_called_with("id")
                 self.__compare_instance__(res_instance, instance)
 
@@ -203,8 +203,8 @@ class TestMock(unittest.TestCase):
                 )
                 with self.assertRaises(ManageExeption):
                     # wrong name
-                    self.manage_obj.instance_get(name="id")
-                res_instance = self.manage_obj.instance_get(name="name")
+                    self._manage_obj.instance_get(name="id")
+                res_instance = self._manage_obj.instance_get(name="name")
                 will_be_nova.servers.list.assert_called_with()
                 self.__compare_instance__(res_instance, instance)
 
@@ -232,7 +232,7 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.get = MagicMock(
                     return_value=instance
                 )
-                self.manage_obj.instance_detach_ip(
+                self._manage_obj.instance_detach_ip(
                     "1.1.1.1", ins_id="id"
                 )
                 will_be_nova.servers.get.assert_called_with("id")
@@ -242,7 +242,7 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.list = MagicMock(
                     return_value=[instance]
                 )
-                self.manage_obj.instance_detach_ip(
+                self._manage_obj.instance_detach_ip(
                     "1.1.1.1", name="name"
                 )
                 will_be_nova.servers.list.assert_called_with()
@@ -272,7 +272,7 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.get = MagicMock(
                     return_value=instance
                 )
-                self.manage_obj.instance_attach_ip(
+                self._manage_obj.instance_attach_ip(
                     "1.1.1.1", ins_id="id"
                 )
                 will_be_nova.servers.get.assert_called_with("id")
@@ -282,7 +282,7 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.list = MagicMock(
                     return_value=[instance]
                 )
-                self.manage_obj.instance_attach_ip(
+                self._manage_obj.instance_attach_ip(
                     "1.1.1.1", name="name"
                 )
                 will_be_nova.servers.list.assert_called_with()
@@ -308,7 +308,7 @@ class TestMock(unittest.TestCase):
                 will_be_nova.servers.list = MagicMock(
                     return_value=[instance]
                 )
-                list_instances = self.manage_obj.instance_list()
+                list_instances = self._manage_obj.instance_list()
                 will_be_nova.servers.list.assert_called_with()
                 self.assertIsNotNone(list_instances)
                 self.assertEqual(len(list_instances), 1)
@@ -342,7 +342,7 @@ class TestMock(unittest.TestCase):
                 )
                 volume.attach = MagicMock(return_value=False)
                 # real run
-                res_volume = self.manage_obj.volume_attach(
+                res_volume = self._manage_obj.volume_attach(
                     "/some/place", vol_id="id", ins_id="id"
                 )
                 self.__compare_volume__(res_volume, volume)
@@ -394,11 +394,11 @@ class TestMock(unittest.TestCase):
                 # real run
                 with self.assertRaises(ManageExeption):
                     # wrong name
-                    self.manage_obj.volume_attach(
+                    self._manage_obj.volume_attach(
                         "/some/place", vol_name="name", ins_name="name"
                     )
                 # correct name
-                res_volume = self.manage_obj.volume_attach(
+                res_volume = self._manage_obj.volume_attach(
                     "/some/place", vol_name="display_name", ins_name="name"
                 )
                 self.__compare_volume__(res_volume, volume)
@@ -431,7 +431,7 @@ class TestMock(unittest.TestCase):
                     return_value=volume
                 )
                 # real run
-                res_volume = self.manage_obj.volume_create(
+                res_volume = self._manage_obj.volume_create(
                     "size", "new_name", "desc"
                 )
                 # compare calls and results
@@ -467,7 +467,7 @@ class TestMock(unittest.TestCase):
                     return_value=volume
                 )
                 # real run
-                res_volume = self.manage_obj.volume_get("id")
+                res_volume = self._manage_obj.volume_get("id")
                 # compare calls and results
                 self.__compare_volume__(res_volume, volume)
                 will_be_cinder.volumes.get.assert_called_with("id")
@@ -500,8 +500,8 @@ class TestMock(unittest.TestCase):
                 # real run
                 with self.assertRaises(ManageExeption):
                     # wrong name
-                    self.manage_obj.volume_get(name="id")
-                res_volume = self.manage_obj.volume_get(
+                    self._manage_obj.volume_get(name="id")
+                res_volume = self._manage_obj.volume_get(
                     name="display_name"
                 )
                 # compare calls and results
@@ -537,7 +537,7 @@ class TestMock(unittest.TestCase):
                     return_value="Correct"
                 )
                 # real run
-                result = self.manage_obj.volume_delete("id")
+                result = self._manage_obj.volume_delete("id")
                 self.assertEqual("Correct", result)
                 will_be_cinder.volumes.get.assert_called_with("id")
                 will_be_cinder.volumes.delete.assert_called_with(volume)
@@ -574,7 +574,7 @@ class TestMock(unittest.TestCase):
                     return_value="Correct"
                 )
                 # real run
-                result = self.manage_obj.volume_delete(name="display_name")
+                result = self._manage_obj.volume_delete(name="display_name")
                 self.assertEqual("Correct", result)
                 will_be_cinder.volumes.get.assert_called_with("id")
                 will_be_cinder.volumes.delete.assert_called_with(volume)
@@ -609,7 +609,7 @@ class TestMock(unittest.TestCase):
                     return_value="Correct"
                 )
                 # real run
-                result = self.manage_obj.volume_detach("id")
+                result = self._manage_obj.volume_detach("id")
                 self.assertEqual("Correct", result)
                 will_be_cinder.volumes.get.assert_called_with("id")
                 will_be_cinder.volumes.detach.assert_called_with(volume)
@@ -646,7 +646,7 @@ class TestMock(unittest.TestCase):
                     return_value="Correct"
                 )
                 # real run
-                result = self.manage_obj.volume_detach(name="display_name")
+                result = self._manage_obj.volume_detach(name="display_name")
                 self.assertEqual("Correct", result)
                 will_be_cinder.volumes.get.assert_called_with("id")
                 will_be_cinder.volumes.detach.assert_called_with(volume)
@@ -688,7 +688,7 @@ class TestMock(unittest.TestCase):
                     paramiko.RSAKey, 'from_private_key', return_value="secret"
                 ) as mock_rsa_key:
                     # look to calls inside format
-                    result = self.manage_obj.volume_format(
+                    result = self._manage_obj.volume_format(
                         "mount_point", key, "username", "ins_ip"
                     )
                     mock_ssh_client.assert_called_with()
@@ -736,7 +736,7 @@ class TestMock(unittest.TestCase):
 
                 will_be_cinder.volumes.list = MagicMock(return_value=[volume])
 
-                list_volumes = self.manage_obj.volume_list()
+                list_volumes = self._manage_obj.volume_list()
 
                 will_be_cinder.volumes.list.assert_called_with()
 

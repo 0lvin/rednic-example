@@ -19,13 +19,13 @@ class ManageUtils(object):
     """ Collection of tools for manage cinder volumes """
 
     # connection to cinder
-    __cinder__ = None
+    _cinder = None
 
     # connection to nova
-    __nova__ = None
+    _nova = None
 
     # logging object
-    __log__ = None
+    _log = None
 
     def __init__(self, user, password, tenant, auth_url, log=None):
         """ Connect to cinder and nova:
@@ -38,18 +38,18 @@ class ManageUtils(object):
             log: logging object that can be used for logging,
                 can be None
         """
-        self.__cinder__ = cinder_client.Client(
+        self._cinder = cinder_client.Client(
             '1', user, password, tenant, auth_url
         )
 
-        self.__nova__ = nova_client.Client(
+        self._nova = nova_client.Client(
             '2', user, password, tenant, auth_url
         )
 
         if log:
-            self.__log__ = log
+            self._log = log
         else:
-            self.__log__ = logging.getLogger('rednic.manage_utils')
+            self._log = logging.getLogger('rednic.manage_utils')
 
     def __instance_convert__(self, instance):
         """ Convert internal instance description to dict format.
@@ -62,7 +62,7 @@ class ManageUtils(object):
         """
 
         if not instance:
-            self.__log__.error("empty instance")
+            self._log.error("empty instance")
             return None
         return {
             "id": instance.id,
@@ -83,7 +83,7 @@ class ManageUtils(object):
             dictionary with all meaningful information
         """
         if not volume:
-            self.__log__.error("empty volume")
+            self._log.error("empty volume")
             return volume
         return {
             "id": volume.id,
@@ -103,9 +103,9 @@ class ManageUtils(object):
         Returns:
             list of dictionaries with volumes description
         """
-        self.__log__.debug("get list volumes")
+        self._log.debug("get list volumes")
 
-        volumes = self.__cinder__.volumes.list()
+        volumes = self._cinder.volumes.list()
 
         return [self.__volume_convert__(v) for v in volumes]
 
@@ -119,10 +119,10 @@ class ManageUtils(object):
         Returns:
             dictionary with description of new volume
         """
-        self.__log__.debug("create volume")
+        self._log.debug("create volume")
 
         return self.__volume_convert__(
-            self.__cinder__.volumes.create(
+            self._cinder.volumes.create(
                 size=size,
                 display_name=name,
                 display_description=description
@@ -144,15 +144,15 @@ class ManageUtils(object):
             ManageExeption: in case when can't get volume
         """
         if vol_id:
-            self.__log__.debug("get volume by vol_id")
+            self._log.debug("get volume by vol_id")
             try:
                 return self.__volume_convert__(
-                    self.__cinder__.volumes.get(vol_id)
+                    self._cinder.volumes.get(vol_id)
                 )
             except cinder_exceptions.NotFound:
                 raise ManageExeption()
         else:
-            self.__log__.debug("get volume by name")
+            self._log.debug("get volume by name")
             for volume in self.volume_list():
                 if volume['name'] == name:
                     return volume
@@ -171,15 +171,15 @@ class ManageUtils(object):
             ManageExeption: in case when can't get instance
         """
         if ins_id:
-            self.__log__.debug("get instance by ins_id")
+            self._log.debug("get instance by ins_id")
             try:
                 return self.__instance_convert__(
-                    self.__nova__.servers.get(ins_id)
+                    self._nova.servers.get(ins_id)
                 )
             except cinder_exceptions.NotFound:
                 raise ManageExeption()
         else:
-            self.__log__.debug("get instance by name")
+            self._log.debug("get instance by name")
             for instance in self.instance_list():
                 if instance['name'] == name:
                     return instance
@@ -196,13 +196,13 @@ class ManageUtils(object):
         Raises:
             ManageExeption: in case when can't attach ip
         """
-        self.__log__.debug("attach ip")
+        self._log.debug("attach ip")
 
         if name:
             internal_instance = self.instance_get(name=name)
             ins_id = internal_instance['id']
 
-        instance = self.__nova__.servers.get(ins_id)
+        instance = self._nova.servers.get(ins_id)
         try:
             instance.add_floating_ip(ip)
         except cinder_exceptions.NotFound:
@@ -219,13 +219,13 @@ class ManageUtils(object):
         Raises:
             ManageExeption: in case when can't detach ip
         """
-        self.__log__.debug("attach ip")
+        self._log.debug("attach ip")
 
         if name:
             internal_instance = self.instance_get(name=name)
             ins_id = internal_instance['id']
 
-        instance = self.__nova__.servers.get(ins_id)
+        instance = self._nova.servers.get(ins_id)
         try:
             instance.remove_floating_ip(ip)
         except cinder_exceptions.NotFound:
@@ -244,15 +244,15 @@ class ManageUtils(object):
             ManageExeption: in case when can't detach volume
         """
         if vol_id:
-            self.__log__.debug("delete volume by vol_id")
-            volume = self.__cinder__.volumes.get(vol_id)
+            self._log.debug("delete volume by vol_id")
+            volume = self._cinder.volumes.get(vol_id)
         else:
-            self.__log__.debug("delete volume by name")
+            self._log.debug("delete volume by name")
             # use our get for get volume by name
             internal_volume = self.volume_get(name=name)
-            volume = self.__cinder__.volumes.get(internal_volume['id'])
+            volume = self._cinder.volumes.get(internal_volume['id'])
         try:
-            return self.__cinder__.volumes.detach(volume)
+            return self._cinder.volumes.detach(volume)
         except cinder_exceptions.BadRequest:
                 raise ManageExeption()
 
@@ -269,15 +269,15 @@ class ManageUtils(object):
             ManageExeption: in case when can't drop volume
         """
         if vol_id:
-            self.__log__.debug("delete volume by vol_id")
-            volume = self.__cinder__.volumes.get(vol_id)
+            self._log.debug("delete volume by vol_id")
+            volume = self._cinder.volumes.get(vol_id)
         else:
-            self.__log__.debug("delete volume by name")
+            self._log.debug("delete volume by name")
             # use our get for get volume by name
             internal_volume = self.volume_get(name=name)
-            volume = self.__cinder__.volumes.get(internal_volume['id'])
+            volume = self._cinder.volumes.get(internal_volume['id'])
         try:
-            return self.__cinder__.volumes.delete(volume)
+            return self._cinder.volumes.delete(volume)
         except cinder_exceptions.BadRequest:
                 raise ManageExeption()
 
@@ -287,7 +287,7 @@ class ManageUtils(object):
         Returns:
             list of dictionaries with instances description
         """
-        instances = self.__nova__.servers.list()
+        instances = self._nova.servers.list()
         return [
             self.__instance_convert__(i) for i in instances
         ]
@@ -320,7 +320,7 @@ class ManageUtils(object):
             internal_volume = self.volume_get(name=vol_name)
             vol_id = internal_volume['id']
 
-        volume = self.__cinder__.volumes.get(vol_id)
+        volume = self._cinder.volumes.get(vol_id)
 
         if not ins_id:
             internal_instance = self.instance_get(name=ins_name)
